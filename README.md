@@ -1,1 +1,0 @@
-# GaLAM-feature-matching
