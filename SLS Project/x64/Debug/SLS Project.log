@@ -1,8 +1,0 @@
-﻿  ImageLoader.cpp
-  main.cpp
-  Generating Code...
-C:\Users\James\Desktop\SLS Project\SLS Project\src\main.cpp(8,32): error C2039: 'loadGray': is not a member of 'ImageLoader'
-      C:\Users\James\Desktop\SLS Project\SLS Project\src\ImageLoader.h(5,7):
-      see declaration of 'ImageLoader'
-  
-C:\Users\James\Desktop\SLS Project\SLS Project\src\main.cpp(8,32): error C3861: 'loadGray': identifier not found
