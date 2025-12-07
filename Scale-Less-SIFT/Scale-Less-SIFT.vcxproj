@@ -106,6 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;C:\opencv\build\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -120,6 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;C:\opencv\build\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,6 +130,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Program0.cpp" />
+    <ClCompile Include="src\DenseMatcher.cpp" />
+    <ClCompile Include="src\DenseSIFT.cpp" />
+    <ClCompile Include="src\ImageLoader.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MultiScaleSIFTExtractor.cpp" />
+    <ClCompile Include="src\PCAHelper.cpp" />
+    <ClCompile Include="src\SLSBuilder.cpp" />
+    <ClCompile Include="src\Visualizer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\DenseMatcher.h" />
+    <ClInclude Include="include\DenseSIFT.h" />
+    <ClInclude Include="include\ImageLoader.h" />
+    <ClInclude Include="include\MultiScaleSIFTExtractor.h" />
+    <ClInclude Include="include\PCAHelper.h" />
+    <ClInclude Include="include\SLSBuilder.h" />
+    <ClInclude Include="include\Visualizer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
