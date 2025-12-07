@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
@@ -29,3 +30,36 @@ Global
 		SolutionGuid = {E981C1CC-07E6-4F08-BE09-210153FE285D}
 	EndGlobalSection
 EndGlobal
+=======
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Scale-Less-SIFT", "Scale-Less-SIFT\Scale-Less-SIFT.vcxproj", "{B99D87D5-73E3-4BBE-8233-E6602E49E62D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Debug|x64.ActiveCfg = Debug|x64
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Debug|x64.Build.0 = Debug|x64
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Debug|x86.ActiveCfg = Debug|Win32
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Debug|x86.Build.0 = Debug|Win32
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Release|x64.ActiveCfg = Release|x64
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Release|x64.Build.0 = Release|x64
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Release|x86.ActiveCfg = Release|Win32
+		{B99D87D5-73E3-4BBE-8233-E6602E49E62D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E981C1CC-07E6-4F08-BE09-210153FE285D}
+	EndGlobalSection
+EndGlobal
+>>>>>>> 830c2f8 (Replace old SLS Project with new Scale-Less-SIFT setup)

@@ -1,0 +1,11 @@
+# Visual Studio workspace folders
+.vs/
+Scale-Less-SIFT/.vs/
+
+# Build folders
+x64/
+Scale-Less-SIFT/x64/
+
+# User-specific settings
+*.vcxproj.user
+*.user
