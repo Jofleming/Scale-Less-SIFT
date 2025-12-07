@@ -1,1 +1,1 @@
-# Scale-Less SIFT
+# GaLAM-feature-matching
