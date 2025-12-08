@@ -1,1 +1,10 @@
-﻿  SLS.vcxproj -> C:\Users\jorda\Documents\CS_Mast\year_1\fall2025\computerVision\finalProject\Scale-Less-SIFT\SLS\x64\Debug\SLS.exe
+﻿  dense_sift.cpp
+  dim_reduce.cpp
+  FlowUtils.cpp
+C:\Users\James\source\repos\Scale-Less-SIFT\SLS\src\FlowUtils.cpp(79,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  main_sls_demo.cpp
+  sls_extractor.cpp
+  sls_subspace.cpp
+C:\Users\James\source\repos\Scale-Less-SIFT\SLS\src\sls_subspace.cpp(58,19): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
+  SLS.vcxproj -> C:\Users\James\source\repos\Scale-Less-SIFT\SLS\x64\Debug\SLS.exe

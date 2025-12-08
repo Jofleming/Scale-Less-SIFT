@@ -1,86 +1,66 @@
-#include "sls/sls_subspace.hpp"
+﻿#include "sls/sls_subspace.hpp"
 #include <opencv2/opencv.hpp>
-#include <iostream>
+#include <cmath>
 #include <cstring>
-
-cv::Mat constructBasis(const cv::Mat& X, int subsDim) {
-    int D = X.rows;
-    int S = X.cols;
-
-    cv::Mat mean;
-    cv::reduce(X, mean, 1, cv::REDUCE_AVG);
-
-    cv::Mat Xc = X.clone();
-    for (int c = 0; c < S; ++c) {
-        Xc.col(c) -= mean;
-    }
-
-    cv::Mat w, u, vt;
-    cv::SVD::compute(Xc, w, u, vt, cv::SVD::MODIFY_A);
-    return u.colRange(0, subsDim).clone();
-}
+#include <algorithm>
 
 cv::Mat computeSLSDescriptors(const cv::Mat& dpMat,
     int numPoints,
     int s1, int s2,
     int numSigma,
-    int subsDim) {
-    int D = dpMat.rows;
-    int numElements = D * (D + 1) / 2;
+    int subsDim)
+{
+    const int D = dpMat.rows;
+    const int SL = D * (D + 1) / 2;
 
-    cv::Mat Btemp(numElements, numPoints, CV_32F);
+    cv::Mat sls(s2, s1, CV_32FC(SL));
 
-    std::vector<int> ind1;
-    ind1.reserve(numElements);
-    for (int r = 0; r < D; ++r) {
-        for (int c = r; c < D; ++c) {
-            int idx = r + c * D;
-            ind1.push_back(idx);
-        }
-    }
+    std::vector<int> inds;
+    inds.reserve(SL);
+    for (int i = 0; i < D; ++i)
+        for (int j = i; j < D; ++j)
+            inds.push_back(i * D + j);
 
-    for (int i = 0; i < numPoints; ++i) {
-        if (i % 1000 == 0) {
-            std::cout << "SLS: pixel " << i << " / " << numPoints << std::endl;
-        }
+    const float diagScale = 1.0f / std::sqrt(2.0f);
 
-        int startCol = i * numSigma;
-        int endCol = (i + 1) * numSigma;
-        cv::Mat dp_i = dpMat(cv::Range::all(), cv::Range(startCol, endCol));
+    for (int p = 0; p < numPoints; ++p)
+    {
+        int start = p * numSigma;
+        int end = start + numSigma;
+        if (end > dpMat.cols) end = dpMat.cols;
+        int K = end - start;
+        if (K <= 0) continue;
 
-        cv::Mat B = constructBasis(dp_i, subsDim);
+        cv::Mat X = dpMat(cv::Range::all(), cv::Range(start, end)).clone();
 
-        cv::Mat A = B * B.t();
+        cv::Mat mean;
+        cv::reduce(X, mean, 1, cv::REDUCE_AVG);
+        for (int c = 0; c < X.cols; ++c)
+            X.col(c) -= mean;
 
-        cv::Mat diagMat = cv::Mat::zeros(D, D, CV_32F);
-        for (int d = 0; d < D; ++d) {
-            float v = A.at<float>(d, d);
-            diagMat.at<float>(d, d) = v;
-        }
-        cv::Mat cMat = A - diagMat;
-        cv::Mat b1 = diagMat * 0.5f;
-        cv::Mat A2 = cMat + b1;
+        cv::Mat W, U, VT;
+        cv::SVD::compute(X, W, U, VT, cv::SVD::MODIFY_A);
 
-        // First transpose into a real Mat, then reshape
-        cv::Mat AT = A2.t();
-        AT = AT.reshape(1, D * D);
+        int d = std::min(std::max(1, subsDim), D);
+        cv::Mat H = U.colRange(0, d).clone();
 
-        cv::Mat h(numElements, 1, CV_32F);
-        for (int k = 0; k < numElements; ++k) {
-            h.at<float>(k, 0) = AT.at<float>(ind1[k], 0);
-        }
+        cv::Mat A = H * H.t();
 
-        h.copyTo(Btemp.col(i));
-    }
+        for (int i = 0; i < D; ++i)
+            A.at<float>(i, i) *= diagScale;
 
-    cv::Mat sls(s2, s1, CV_32FC(numElements));
+        cv::Mat flat = A.reshape(1, D * D);
 
-    for (int i = 0; i < numPoints; ++i) {
-        int row = i / s1;
-        int col = i % s1;
-        float* dst = sls.ptr<float>(row, col);
-        const float* src = Btemp.col(i).ptr<float>(0);
-        std::memcpy(dst, src, numElements * sizeof(float));
+        cv::Mat h(1, SL, CV_32F);
+        for (int k = 0; k < SL; ++k)
+            h.at<float>(0, k) = flat.at<float>(inds[k], 0);
+
+        float nrm = cv::norm(h);
+        if (nrm > 1e-8f) h /= nrm;
+
+        int row = p / s1;
+        int col = p % s1;
+        memcpy(sls.ptr<float>(row, col), h.ptr<float>(), SL * sizeof(float));
     }
 
     return sls;

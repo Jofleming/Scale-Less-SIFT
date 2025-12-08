@@ -5,95 +5,130 @@
 #include "sls/sls_options.hpp"
 #include "sls/sls_extractor.hpp"
 #include "sls/dense_sift.hpp"
+#include "sls/FlowUtils.hpp"
 
-using namespace cv;
 using std::cout;
 using std::endl;
 
+static cv::Mat descriptorGridToImage(const DescriptorGrid& grid, int dim)
+{
+    cv::Mat descImg(grid.s2, grid.s1, CV_32FC(dim));
+
+    for (int p = 0; p < grid.numPoints; ++p) {
+        int row = p / grid.s1;
+        int col = p % grid.s1;
+
+        const float* src = grid.dpMat.col(p).ptr<float>(0);
+        float* dst = descImg.ptr<float>(row, col);
+
+        for (int d = 0; d < dim; ++d)
+            dst[d] = src[d];
+    }
+    return descImg;
+}
+
 int main(int argc, char** argv)
 {
-    // Can pass in image paths or will default to source.jpg and target.jpg
     std::string srcPath = (argc > 1) ? argv[1] : "data/source.jpg";
     std::string tgtPath = (argc > 2) ? argv[2] : "data/target.jpg";
 
-    // Load images and make grayscale
-    Mat img1 = imread(srcPath, IMREAD_GRAYSCALE);
-    Mat img2 = imread(tgtPath, IMREAD_GRAYSCALE);
+    cv::Mat I1 = cv::imread(srcPath);
+    cv::Mat I2 = cv::imread(tgtPath);
 
-    if (img1.empty() || img2.empty()) {
-        std::cerr << "ERROR: could not load source or target image.\n";
-        std::cerr << "  source: " << srcPath << "\n";
-        std::cerr << "  target: " << tgtPath << "\n";
+    if (I1.empty() || I2.empty()) {
+        std::cerr << "ERROR: could not load source/target images from data/ folder.\n";
         return -1;
     }
 
     cout << "Loaded images:\n";
-    cout << "  source: " << srcPath << "  (" << img1.cols << " x " << img1.rows << ")\n";
-    cout << "  target: " << tgtPath << "  (" << img2.cols << " x " << img2.rows << ")\n";
+    cout << "  source: " << srcPath << "  (" << I1.cols << " x " << I1.rows << ")\n";
+    cout << "  target: " << tgtPath << "  (" << I2.cols << " x " << I2.rows << ")\n";
 
-    // Downsample for speed. Can change if needed
-    double scaleFactor = 0.25;
-    if (scaleFactor != 1.0) {
-        resize(img1, img1, Size(), scaleFactor, scaleFactor, INTER_AREA);
-        resize(img2, img2, Size(), scaleFactor, scaleFactor, INTER_AREA);
-        cout << "After downsampling: "
-            << img1.cols << " x " << img1.rows << endl;
-    }
+    cv::Mat I1d, I2d;
+    cv::resize(I1, I1d, cv::Size(), 0.25, 0.25);
+    cv::resize(I2, I2d, cv::Size(), 0.25, 0.25);
+    cout << "After downsampling: " << I1d.cols << " x " << I1d.rows << "\n\n";
 
-    // Compute dense SIFT (DSIFT) baseline
-    SLSOptions opts;
+    cout << "[INFO] Computing DSIFT baseline...\n";
 
-    opts.sigma.clear();
-    int numSigma = 3;
-    float sigmaStart = 1.0f;
-    float sigmaEnd = 4.0f;
-    float step = (sigmaEnd - sigmaStart) / (numSigma - 1);
+    SLSOptions dsiftOpts;
+    dsiftOpts.gridSpacing = 4;
+    dsiftOpts.sigma = { 2.0f };
+    dsiftOpts.dimReduction = 0;
+    dsiftOpts.dimReductionCov = 0;
+    dsiftOpts.subsDim = 0;
 
-    for (int i = 0; i < numSigma; ++i) {
-        float s = sigmaStart + i * step;
-        opts.sigma.push_back(s);
-    }
+    cv::Mat g1, g2;
+    cv::cvtColor(I1d, g1, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(I2d, g2, cv::COLOR_BGR2GRAY);
+    g1.convertTo(g1, CV_8U);
+    g2.convertTo(g2, CV_8U);
 
-    opts.gridSpacing = 8;
-    opts.dimReduction = 32;
-    opts.dimReductionCov = 20000;
-    opts.subsDim = 6;
+    DescriptorGrid ds1 = generateDescriptors(g1, dsiftOpts);
+    DescriptorGrid ds2 = generateDescriptors(g2, dsiftOpts);
 
-    TickMeter tm;
-
-    cout << "\n[INFO] Computing DSIFT descriptors...\n";
-    tm.start();
-    DescriptorGrid ds1 = generateDescriptors(img1, opts);
-    DescriptorGrid ds2 = generateDescriptors(img2, opts);
-    tm.stop();
-    cout << "[INFO] DSIFT done.\n";
-
-    cout << "\nDSIFT baseline:\n";
+    cout << "DSIFT baseline:\n";
     cout << "  image1: dpMat = " << ds1.dpMat.rows << " x " << ds1.dpMat.cols
         << ", numPoints = " << ds1.numPoints
         << ", grid = " << ds1.s1 << " x " << ds1.s2 << "\n";
     cout << "  image2: dpMat = " << ds2.dpMat.rows << " x " << ds2.dpMat.cols
         << ", numPoints = " << ds2.numPoints
         << ", grid = " << ds2.s1 << " x " << ds2.s2 << "\n";
-    cout << "  DSIFT extraction time: " << tm.getTimeMilli() << " ms\n";
 
-    // Compute Scale-less SIFT (SLS) descriptors
-    bool usePaperParams = false;
+    cv::Mat dsDesc1 = descriptorGridToImage(ds1, 128);
+    cv::Mat dsDesc2 = descriptorGridToImage(ds2, 128);
 
-    cout << "\nComputing SLS descriptors...\n";
-    tm.reset();
-    tm.start();
-    SLSOutput slsOut = extractScalelessDescs(img1, img2, usePaperParams);
-    tm.stop();
-    cout << "SLS done.\n";
+    int windowRadius = 5;
+    cv::Mat flowDSIFT = sls::computeDenseFlowLocal(dsDesc1, dsDesc2, windowRadius);
 
-    cout << "\nSLS descriptors:\n";
-    cout << "  desc1 size: " << slsOut.desc1.size << "\n";
-    cout << "  desc2 size: " << slsOut.desc2.size << "\n";
-    cout << "  PCA basis size: " << slsOut.pcaBasis.rows
-        << " x " << slsOut.pcaBasis.cols << "\n";
-    cout << "  SLS extraction time: " << tm.getTimeMilli() << " ms\n";
+    cv::Mat I1_grid;
+    cv::resize(I1d, I1_grid, cv::Size(ds1.s1, ds1.s2));
 
-    cout << "\nDone.\n";
+    cv::Mat warpDSIFT_small = sls::warpImage(I1_grid, flowDSIFT);
+    cv::Mat warpDSIFT;
+    cv::resize(warpDSIFT_small, warpDSIFT, I1d.size());
+
+    cv::imwrite("dsift_warp.png", warpDSIFT);
+
+    cv::Mat flowColorDSIFT = sls::flowToColor(flowDSIFT);
+    cv::imwrite("flow_dsift_color.png", flowColorDSIFT);
+
+    cout << "\n[INFO] Computing SLS descriptors...\n";
+
+    bool usePaperParams = true;
+    SLSOutput slsOut = extractScalelessDescs(I1d, I2d, usePaperParams);
+
+    cout << "SLS descriptors:\n";
+    cout << "  desc1 size: " << slsOut.desc1.rows << " x "
+        << slsOut.desc1.cols << " x " << slsOut.desc1.channels() << "\n";
+    cout << "  desc2 size: " << slsOut.desc2.rows << " x "
+        << slsOut.desc2.cols << " x " << slsOut.desc2.channels() << "\n";
+
+    cv::Mat flowSLS = sls::computeDenseFlowLocal(slsOut.desc1, slsOut.desc2, windowRadius);
+
+    cv::Mat warpSLS_small = sls::warpImage(I1_grid, flowSLS);
+    cv::Mat warpSLS;
+    cv::resize(warpSLS_small, warpSLS, I1d.size());
+
+    cv::imwrite("sls_warp.png", warpSLS);
+
+    cv::Mat flowColorSLS = sls::flowToColor(flowSLS);
+    cv::imwrite("flow_sls_color.png", flowColorSLS);
+
+    cv::Mat slsVis = slsOut.desc1.reshape(1, slsOut.desc1.rows * slsOut.desc1.cols);
+    double minVal, maxVal;
+    cv::minMaxLoc(slsVis, &minVal, &maxVal);
+
+    cv::Mat slsNorm;
+    cv::normalize(slsVis, slsNorm, 0, 255, cv::NORM_MINMAX, CV_8U);
+    cv::imwrite("sls_descriptor_visual.png", slsNorm);
+
+    cout << "\n[INFO] Visualization complete. Files saved:\n"
+        << "  dsift_warp.png\n"
+        << "  flow_dsift_color.png\n"
+        << "  sls_warp.png\n"
+        << "  flow_sls_color.png\n"
+        << "  sls_descriptor_visual.png\n";
+
     return 0;
 }

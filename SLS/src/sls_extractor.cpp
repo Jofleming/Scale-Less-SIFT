@@ -3,47 +3,47 @@
 #include "sls/dim_reduce.hpp"
 #include "sls/sls_subspace.hpp"
 #include <opencv2/imgproc.hpp>
+#include <cmath>
 
 SLSOutput extractScalelessDescs(const cv::Mat& I1,
     const cv::Mat& I2,
-    bool usePaperParams) {
+    bool usePaperParams)
+{
     SLSOptions opts;
 
+    int numSigma = 20;
+    opts.sigma.clear();
+    float minS = 0.5f, maxS = 12.0f;
+
+    for (int i = 0; i < numSigma; ++i)
+    {
+        float t = (float)i / (numSigma - 1);
+        float s = minS * std::pow(maxS / minS, t);
+        opts.sigma.push_back(s);
+    }
+
+    opts.gridSpacing = 4;
+
     if (usePaperParams) {
-        int numSigma = 20;
-        opts.sigma.clear();
-        for (int i = 0; i < numSigma; ++i) {
-            float v = 0.5f + (12.0f - 0.5f) * i / (numSigma - 1);
-            opts.sigma.push_back(v);
-        }
-        opts.dimReduction = 0;
-        opts.dimReductionCov = 0;
-        opts.subsDim = 8;
+        opts.dimReduction = 30;
+        opts.dimReductionCov = 50000;
+        opts.subsDim = std::min(8, opts.dimReduction);
     }
     else {
-        // default PCA reduced version
-        int numSigma = 20;
-        opts.sigma.clear();
-        for (int i = 0; i < numSigma; ++i) {
-            float v = 0.2f + (12.0f - 0.2f) * i / (numSigma - 1);
-            opts.sigma.push_back(v);
-        }
-        opts.dimReduction = 32;
+        opts.dimReduction = 30;
         opts.dimReductionCov = 50000;
-        opts.subsDim = 10;
+        opts.subsDim = std::min(10, opts.dimReduction);
     }
 
-    opts.gridSpacing = 1;
-
-    // Convert to grayscale float [0,1]
     cv::Mat g1, g2;
     if (I1.channels() == 3) cv::cvtColor(I1, g1, cv::COLOR_BGR2GRAY);
     else g1 = I1.clone();
+
     if (I2.channels() == 3) cv::cvtColor(I2, g2, cv::COLOR_BGR2GRAY);
     else g2 = I2.clone();
 
-    g1.convertTo(g1, CV_32F, 1.0 / 255.0);
-    g2.convertTo(g2, CV_32F, 1.0 / 255.0);
+    g1.convertTo(g1, CV_8U);
+    g2.convertTo(g2, CV_8U);
 
     DescriptorGrid grid1 = generateDescriptors(g1, opts);
     DescriptorGrid grid2 = generateDescriptors(g2, opts);
@@ -52,8 +52,6 @@ SLSOutput extractScalelessDescs(const cv::Mat& I1,
 
     cv::Mat dp1 = dr.dpMat1Reduced;
     cv::Mat dp2 = dr.dpMat2Reduced;
-
-    int numSigma = static_cast<int>(opts.sigma.size());
 
     cv::Mat sls1 = computeSLSDescriptors(dp1,
         grid1.numPoints,
@@ -71,5 +69,6 @@ SLSOutput extractScalelessDescs(const cv::Mat& I1,
     out.desc1 = sls1;
     out.desc2 = sls2;
     out.pcaBasis = dr.pcaBasis;
+
     return out;
 }
