@@ -3,9 +3,9 @@
 #include "sls_options.hpp"
 
 struct DimReduceResult {
-    cv::Mat dpMat1Reduced;  // reducedDim x (N1*S)
-    cv::Mat dpMat2Reduced;  // reducedDim x (N2*S)
-    cv::Mat pcaBasis;       // originalDim x reducedDim
+    cv::Mat dpMat1Reduced;
+    cv::Mat dpMat2Reduced;
+    cv::Mat pcaBasis;
 };
 
 DimReduceResult dimReduce(const cv::Mat& dpMat1,

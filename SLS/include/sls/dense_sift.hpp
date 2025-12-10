@@ -4,9 +4,9 @@
 #include "sls_options.hpp"
 
 struct DescriptorGrid {
-    cv::Mat dpMat;   // D x (numPoints * numSigma), CV_32F
-    int numPoints;   // number of grid locations N
-    int s1, s2;      // grid dimensions (width, height)
+    cv::Mat dpMat;
+    int numPoints;
+    int s1, s2;
 };
 
 DescriptorGrid generateDescriptors(const cv::Mat& grayImage, const SLSOptions& opts);

@@ -3,9 +3,9 @@
 #include "sls_options.hpp"
 
 struct SLSOutput {
-    cv::Mat desc1;    // SLS volume for image 1: H1 x W1 x dim (CV_32FC(dim))
-    cv::Mat desc2;    // SLS volume for image 2
-    cv::Mat pcaBasis; // optional PCA basis
+    cv::Mat desc1;
+    cv::Mat desc2;
+    cv::Mat pcaBasis;
 };
 
 SLSOutput extractScalelessDescs(const cv::Mat& I1,
