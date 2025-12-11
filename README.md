@@ -81,7 +81,8 @@ The visual results also showed cleaner and more coherent matches for SLS.
 
 The original SLS algorithm requires constructing an upper-triangular matrix representation for subspace distances. 
 This step is extremely expensive and impractical for real-time computation. 
-The authors themselves provide a simplified ìpaperî mode in their MATLAB code.
+The authors themselves provide a simplified ‚Äúpaper‚Äù mode in their MATLAB code.
+
 
 This reproduction uses a streamlined approach:
 
@@ -109,4 +110,5 @@ Images with scale changes or object size differences will best illustrate the ad
 ## Reference
 
 Hassner, T., Filosof, S., Mayzels, V., & Zelnik-Manor, L.
-ìSIFTing Through Scales.î IEEE Transactions on Pattern Analysis and Machine Intelligence, 2017.
+‚ÄúSIFTing Through Scales.‚Äù IEEE Transactions on Pattern Analysis and Machine Intelligence, 2017.
+
