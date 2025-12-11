@@ -83,6 +83,7 @@ The original SLS algorithm requires constructing an upper-triangular matrix repr
 This step is extremely expensive and impractical for real-time computation. 
 The authors themselves provide a simplified “paper” mode in their MATLAB code.
 
+
 This reproduction uses a streamlined approach:
 
 Instead of computing the full Grassmann manifold mapping, PCA is used to reduce multi-scale descriptors, 
@@ -110,3 +111,4 @@ Images with scale changes or object size differences will best illustrate the ad
 
 Hassner, T., Filosof, S., Mayzels, V., & Zelnik-Manor, L.
 “SIFTing Through Scales.” IEEE Transactions on Pattern Analysis and Machine Intelligence, 2017.
+
